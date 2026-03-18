@@ -1,0 +1,23 @@
+# Web Framework
+Flask==2.3.0
+Flask-CORS==4.0.0
+Werkzeug==2.3.0
+
+# HTTP Requests
+requests==2.31.0
+urllib3==2.0.7
+certifi==2023.7.22
+
+# GUI Automation
+pyautogui==0.9.53
+python-xlib==0.33
+pynput==1.7.6
+
+# Browser Automation (опционально)
+selenium==4.10.0
+
+# Data/Config
+python-dotenv==1.0.0
+
+# Utilities
+psutil==5.9.5

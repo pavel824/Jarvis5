@@ -1,0 +1,28 @@
+{
+  "commands": {
+    "app_launch": {
+      "youtube": {
+        "triggers": ["youtube", "yutub"],
+        "app_path": "xdg-open https://youtube.com",
+        "wait_ms": 2000
+      },
+      "telegram": {
+        "triggers": ["telegram"],
+        "app_path": "telegram-desktop",
+        "wait_ms": 3000
+      },
+      "discord": {
+        "triggers": ["discord"],
+        "app_path": "discord",
+        "wait_ms": 3000
+      }
+    }
+  },
+  "composition_rules": {
+    "priority_order": ["app_launch", "search", "media_control", "volume_control"],
+    "dependencies": {
+      "search": "app_launch",
+      "media_control": "app_launch"
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "commands": {
+    "app_launch": {
+      "youtube": ["youtube", "yutub", "youtuban", "videoni", "video"],
+      "telegram": ["telegram", "telegramni", "tg"],
+      "discord": ["discord", "diskord"],
+      "code": ["code", "vscode", "bekod"],
+      "chrome": ["chrome", "brauzer", "internet"],
+      "firefox": ["firefox", "ff"],
+      "nautilus": ["nautilus", "fayl", "papka", "fayllar"],
+      "terminal": ["terminal", "konsol", "terminalda"],
+      "spotify": ["spotify", "musiqa"],
+      "vlc": ["vlc", "pleyer"]
+    },
+    
+    "search": {
+      "google": ["google", "qidirish", "izlash", "topish"],
+      "yandex": ["yandex"],
+      "youtube_search": ["youtube", "yutub"]
+    },
+    
+    "media_control": {
+      "play": ["qoying", "ijro", "boshlash", "play"],
+      "pause": ["to'xtat", "pavuza", "pause"],
+      "next": ["keyingisi", "oldinga", "next"],
+      "previous": ["oldingi", "orqaga", "prev"],
+      "stop": ["to'xtat", "o'chir", "stop"]
+    },
+    
+    "volume_control": {
+      "increase": ["kattalashtir", "ovozni_oshir", "ko'proq"],
+      "decrease": ["kamayshi", "ovozni_kamaytir", "kamroq"],
+      "mute": ["jimga", "ovozni_o'chir"]
+    },
+    
+    "system": {
+      "brightness": ["yoritirish", "ekran_yorug'ligi"],
+      "wifi": ["wifi", "internet"],
+      "time": ["vaqt", "soat"],
+      "date": ["sana", "bugun"]
+    }
+  },
+  
+  "modifiers": {
+    "popular": ["mashhur", "popuyar", "top"],
+    "latest": ["so'nggi", "yangi"],
+    "english": ["ingliz", "english"],
+    "russian": ["rus", "russian"],
+    "uzbek": ["o'zbek", "uzbek"]
+  }
+}
