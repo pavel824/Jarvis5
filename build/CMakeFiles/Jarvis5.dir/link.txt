@@ -1,0 +1,1 @@
+/usr/bin/c++ -Wl,--dependency-file=CMakeFiles/Jarvis5.dir/link.d CMakeFiles/Jarvis5.dir/main.cpp.o CMakeFiles/Jarvis5.dir/src/audioCapture.cpp.o CMakeFiles/Jarvis5.dir/src/recognizer.cpp.o -o Jarvis5   -L/home/sirius/works/Jarvis5/src/library  -Wl,-rpath,/home/sirius/works/Jarvis5/src/library -lvosk -lpthread -ldl -lrt -lm
