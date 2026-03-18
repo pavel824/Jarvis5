@@ -3,96 +3,211 @@
 #include <vector>
 #include <algorithm>
 #include <cstring>
+#include <iostream>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <fstream>
+#include <sstream>
+#include <json/json.h>
 
-Recognizer::Recognizer(const std::string& model_path)
+Recognizer::Recognizer(const std::string& api_key)
 {
-    model = vosk_model_new(model_path.c_str());
-    if (!model) throw std::runtime_error("Не удалось загрузить модель: " + model_path);
-
-    recognizer = vosk_recognizer_new(model, 16000.0f);
-    if (!recognizer) {
-        vosk_model_free(model);
-        throw std::runtime_error("Не удалось создать VoskRecognizer");
+    // Для Aisha AI нам нужен только API ключ
+    if (api_key.empty()) {
+        throw std::runtime_error("API ключ Aisha не предоставлен");
     }
+    // Сохраняем API ключ в приватное поле (добавь в .h файл)
+    this->api_key = api_key;
+    std::cout << "✅ Aisha AI Recognizer инициализирован\n";
 }
 
 Recognizer::~Recognizer()
 {
-    if (recognizer) vosk_recognizer_free(recognizer);
-    if (model)      vosk_model_free(model);
+    // Для Aisha нечего очищать
 }
 
-void Recognizer::reset() { if (recognizer) vosk_recognizer_reset(recognizer); }
+void Recognizer::reset() 
+{ 
+    // Для Aisha нечего сбрасывать
+}
+
+// Сохранить аудио в WAV формат
+void Recognizer::saveAudioToWav(const std::vector<float>& audio, const std::string& filename)
+{
+    std::ofstream file(filename, std::ios::binary);
+    if (!file) return;
+
+    int sample_rate = 16000;
+    int channels = 1;
+    int bits_per_sample = 16;
+    int byte_rate = sample_rate * channels * bits_per_sample / 8;
+    int block_align = channels * bits_per_sample / 8;
+    int data_size = audio.size() * 2;
+
+    // WAV заголовок
+    file.write("RIFF", 4);
+    int file_size = 36 + data_size;
+    file.write((char*)&file_size, 4);
+    file.write("WAVE", 4);
+    
+    file.write("fmt ", 4);
+    int fmt_size = 16;
+    file.write((char*)&fmt_size, 4);
+    short audio_format = 1;
+    file.write((char*)&audio_format, 2);
+    file.write((char*)&channels, 2);
+    file.write((char*)&sample_rate, 4);
+    file.write((char*)&byte_rate, 4);
+    file.write((char*)&block_align, 2);
+    file.write((char*)&bits_per_sample, 2);
+    
+    file.write("data", 4);
+    file.write((char*)&data_size, 4);
+
+    // Конвертируем float [-1.0, 1.0] в int16
+    for (float sample : audio) {
+        float clamped = std::clamp(sample, -1.0f, 1.0f);
+        short pcm = static_cast<short>(clamped * 32767.0f);
+        file.write((char*)&pcm, 2);
+    }
+
+    file.close();
+}
+
+// Отправить на Aisha AI через Python сервис
+std::string Recognizer::sendToAishaAI(const std::vector<float>& audio)
+{
+    try {
+        // Сохраняем аудио в WAV
+        std::string wav_file = "/tmp/recognizer_audio.wav";
+        saveAudioToWav(audio, wav_file);
+
+        std::cout << "🔄 Отправляю аудио на Aisha AI...\n";
+
+        // Подключаемся к Python сервису на 5001
+        int sock = socket(AF_INET, SOCK_STREAM, 0);
+        if (sock < 0) {
+            std::cerr << "❌ Ошибка создания сокета\n";
+            return "";
+        }
+
+        sockaddr_in server_addr{};
+        server_addr.sin_family = AF_INET;
+        server_addr.sin_port = htons(5001);
+        inet_pton(AF_INET, "127.0.0.1", &server_addr.sin_addr);
+
+        if (connect(sock, (sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
+            std::cerr << "❌ Не удалось подключиться к Python сервису на 5001\n";
+            std::cerr << "   Убедись что запущен: python stt_service.py\n";
+            close(sock);
+            return "";
+        }
+
+        // Читаем WAV файл
+        std::ifstream file(wav_file, std::ios::binary);
+        if (!file) {
+            close(sock);
+            return "";
+        }
+
+        std::string wav_data((std::istreambuf_iterator<char>(file)), 
+                             std::istreambuf_iterator<char>());
+        file.close();
+
+        // Multipart form data для отправки файла
+        std::string boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW";
+        std::string body = 
+            "--" + boundary + "\r\n"
+            "Content-Disposition: form-data; name=\"audio\"; filename=\"audio.wav\"\r\n"
+            "Content-Type: audio/wav\r\n\r\n" +
+            wav_data + "\r\n"
+            "--" + boundary + "--\r\n";
+
+        std::string request = 
+            "POST /transcribe HTTP/1.1\r\n"
+            "Host: 127.0.0.1:5001\r\n"
+            "Content-Type: multipart/form-data; boundary=" + boundary + "\r\n"
+            "Content-Length: " + std::to_string(body.length()) + "\r\n"
+            "Connection: close\r\n"
+            "\r\n";
+
+        send(sock, request.c_str(), request.length(), 0);
+        send(sock, body.c_str(), body.length(), 0);
+        
+        // Читаем ответ
+        char buffer[8192] = {0};
+        std::string response;
+        while (recv(sock, buffer, sizeof(buffer), 0) > 0) {
+            response += buffer;
+            memset(buffer, 0, sizeof(buffer));
+        }
+        close(sock);
+
+        // Парсим JSON ответ
+        // Находим JSON часть (после пустой строки в HTTP ответе)
+        size_t json_start = response.find("\r\n\r\n");
+        if (json_start != std::string::npos) {
+            json_start += 4;
+            std::string json_str = response.substr(json_start);
+            
+            // Удаляем мусор после JSON
+            size_t json_end = json_str.find('}');
+            if (json_end != std::string::npos) {
+                json_str = json_str.substr(0, json_end + 1);
+            }
+
+            // Простой парсинг JSON (ищем "text": "...")
+            size_t text_pos = json_str.find("\"text\"");
+            if (text_pos != std::string::npos) {
+                size_t start = json_str.find(':', text_pos) + 1;
+                while (start < json_str.length() && json_str[start] != '"') start++;
+                start++; // пропускаем кавычку
+                
+                size_t end = start;
+                while (end < json_str.length() && json_str[end] != '"') end++;
+                
+                std::string text = json_str.substr(start, end - start);
+                
+                if (!text.empty()) {
+                    std::cout << "\n🎤 Aisha AI распознала: " << text << "\n";
+                    std::cout << "════════════════════════════════════════\n";
+                    return text;
+                }
+            }
+        }
+
+        std::cout << "⚠️  Aisha AI не распознала речь\n";
+        return "";
+
+    } catch (const std::exception& e) {
+        std::cerr << "❌ Ошибка: " << e.what() << "\n";
+        return "";
+    }
+}
 
 bool Recognizer::acceptWaveform(const std::vector<float>& audio)
 {
     if (audio.size() < 800) return false;
-
-    std::vector<short> pcm(audio.size());
-    for (size_t i = 0; i < audio.size(); ++i) {
-        float s = std::clamp(audio[i], -1.0f, 1.0f);
-        pcm[i] = static_cast<short>(s * 32767.0f);
-    }
-
-    return vosk_recognizer_accept_waveform(recognizer,
-        reinterpret_cast<const char*>(pcm.data()), static_cast<int>(pcm.size())) != 0;
+    
+    // Отправляем на Aisha AI и сохраняем результат
+    last_result = sendToAishaAI(audio);
+    
+    return !last_result.empty();
 }
 
-// Принудительный финал — решает проблему "не слышит последние слова"
 std::string Recognizer::forceFinalResult() const
 {
-    if (!recognizer) return "";
-
-    const char* json = vosk_recognizer_final_result(recognizer);
-    if (!json) return "";
-
-    std::string s(json);
-    size_t pos = s.find("\"text\" : \"");
-    if (pos == std::string::npos) return "";
-
-    pos += 10;
-    size_t end = s.find('"', pos);
-    if (end == std::string::npos) return "";
-
-    std::string text = s.substr(pos, end - pos);
-
-    // очистка мусора для узбекской модели
-    text.erase(std::remove_if(text.begin(), text.end(), [](unsigned char c){
-        return (c < 32 && c != ' ' && c != '\'' && c != '-') || c > 127;
-    }), text.end());
-
-    text.erase(0, text.find_first_not_of(" \t\n\r"));
-    text.erase(text.find_last_not_of(" \t\n\r") + 1);
-
-    return text;
+    return last_result;
 }
 
 std::string Recognizer::getResult() const
 {
-    if (!recognizer) return "";
-    const char* json = vosk_recognizer_result(recognizer);
-    if (!json) return "";
-
-    std::string s(json);
-    size_t pos = s.find("\"text\" : \"");
-    if (pos == std::string::npos) return "";
-    pos += 10;
-    size_t end = s.find('"', pos);
-    if (end == std::string::npos) return "";
-    return s.substr(pos, end - pos);
+    return last_result;
 }
 
 std::string Recognizer::getPartialResult() const
 {
-    if (!recognizer) return "";
-    const char* json = vosk_recognizer_partial_result(recognizer);
-    if (!json) return "";
-
-    std::string s(json);
-    size_t pos = s.find("\"partial\" : \"");
-    if (pos == std::string::npos) return "";
-    pos += 13;
-    size_t end = s.find('"', pos);
-    if (end == std::string::npos) return "";
-    return s.substr(pos, end - pos);
+    return "";
 }

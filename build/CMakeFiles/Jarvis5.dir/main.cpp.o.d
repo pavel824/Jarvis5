@@ -182,21 +182,13 @@ CMakeFiles/Jarvis5.dir/main.cpp.o: /home/sirius/works/Jarvis5/main.cpp \
  /usr/include/c++/15.2.1/bits/stl_bvector.h \
  /usr/include/c++/15.2.1/bits/vector.tcc /usr/include/c++/15.2.1/mutex \
  /usr/include/c++/15.2.1/bits/std_mutex.h \
- /usr/include/c++/15.2.1/bits/unique_lock.h /usr/include/sys/socket.h \
- /usr/include/bits/types/struct_iovec.h /usr/include/bits/socket.h \
- /usr/include/bits/socket_type.h /usr/include/bits/sockaddr.h \
- /usr/include/asm/socket.h /usr/include/asm-generic/socket.h \
- /usr/include/asm/sockios.h /usr/include/asm-generic/sockios.h \
- /usr/include/bits/types/struct_osockaddr.h /usr/include/netinet/in.h \
- /usr/include/bits/in.h /usr/include/arpa/inet.h /usr/include/unistd.h \
+ /usr/include/c++/15.2.1/bits/unique_lock.h /usr/include/unistd.h \
  /usr/include/bits/posix_opt.h /usr/include/bits/environments.h \
  /usr/include/bits/confname.h /usr/include/bits/getopt_posix.h \
  /usr/include/bits/getopt_core.h /usr/include/bits/unistd_ext.h \
- /usr/include/linux/close_range.h /usr/include/c++/15.2.1/cstring \
- /usr/include/string.h /usr/include/strings.h \
+ /usr/include/linux/close_range.h \
  /home/sirius/works/Jarvis5/src/audioCapture.h \
  /home/sirius/works/Jarvis5/src/library/miniaudio.h \
  /usr/include/c++/15.2.1/deque /usr/include/c++/15.2.1/bits/stl_deque.h \
  /usr/include/c++/15.2.1/bits/deque.tcc \
- /home/sirius/works/Jarvis5/src/recognizer.h \
- /home/sirius/works/Jarvis5/src/library/vosk_api.h
+ /home/sirius/works/Jarvis5/src/recognizer.h

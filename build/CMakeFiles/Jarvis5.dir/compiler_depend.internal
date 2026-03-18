@@ -5,9 +5,8 @@ CMakeFiles/Jarvis5.dir/main.cpp.o
  /home/sirius/works/Jarvis5/main.cpp
  /home/sirius/works/Jarvis5/src/audioCapture.h
  /home/sirius/works/Jarvis5/src/library/miniaudio.h
- /home/sirius/works/Jarvis5/src/library/vosk_api.h
- /home/sirius/works/Jarvis5/src/recognizer.h
  /usr/include/alloca.h
+ /usr/include/arpa/inet.h
  /usr/include/asm-generic/bitsperlong.h
  /usr/include/asm-generic/errno-base.h
  /usr/include/asm-generic/errno.h
