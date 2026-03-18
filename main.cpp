@@ -8,10 +8,54 @@
 #include <mutex>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <unistd.h>
+#include <cstring>
 
 #include "src/audioCapture.h"
 #include "src/recognizer.h"
+
+// Простой HTTP POST запрос к Python серверу
+bool sendToPythonServer(const std::string& text) {
+    try {
+        int sock = socket(AF_INET, SOCK_STREAM, 0);
+        if (sock < 0) return false;
+
+        sockaddr_in server_addr{};
+        server_addr.sin_family = AF_INET;
+        server_addr.sin_port = htons(5000);
+        inet_pton(AF_INET, "127.0.0.1", &server_addr.sin_addr);
+
+        if (connect(sock, (sockaddr*)&server_addr, sizeof(server_addr)) < 0) {
+            close(sock);
+            return false;
+        }
+
+        // JSON payload
+        std::string json_payload = R"({"text": ")" + text + R"(", "language": "uz"})";
+        
+        // HTTP POST запрос
+        std::string request = 
+            "POST /process_speech HTTP/1.1\r\n"
+            "Host: 127.0.0.1:5000\r\n"
+            "Content-Type: application/json\r\n"
+            "Content-Length: " + std::to_string(json_payload.length()) + "\r\n"
+            "Connection: close\r\n"
+            "\r\n" + json_payload;
+
+        send(sock, request.c_str(), request.length(), 0);
+        
+        // Читаем ответ
+        char buffer[4096] = {0};
+        recv(sock, buffer, sizeof(buffer), 0);
+        close(sock);
+        
+        std::cout << "📤 Отправлено Python серверу: " << text << "\n";
+        return true;
+    } catch (...) {
+        return false;
+    }
+}
 
 int main(int argc, char* argv[])
 {
@@ -31,41 +75,6 @@ int main(int argc, char* argv[])
         audioCapture.start();
 
         std::atomic<bool> running{true};
-
-        // TCP сервер
-        std::thread serverThread([&running, &clients, &clientMutex]()
-        {
-            int server_fd = socket(AF_INET, SOCK_STREAM, 0);
-            if (server_fd < 0) return;
-
-            int opt = 1;
-            setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-
-            sockaddr_in address{};
-            address.sin_family = AF_INET;
-            address.sin_addr.s_addr = INADDR_ANY;
-            address.sin_port = htons(8080);
-
-            if (bind(server_fd, (sockaddr*)&address, sizeof(address)) < 0) {
-                close(server_fd);
-                return;
-            }
-
-            listen(server_fd, 10);
-            std::cout << "✅ API сервер на порту 8080\n";
-
-            while (running)
-            {
-                int client = accept(server_fd, nullptr, nullptr);
-                if (client >= 0)
-                {
-                    std::lock_guard<std::mutex> lock(clientMutex);
-                    clients.push_back(client);
-                    std::cout << "👤 Клиент подключился\n";
-                }
-            }
-            close(server_fd);
-        });
 
         // Обработка аудио с AI мозгом
         std::thread audioThread([&]()
@@ -104,6 +113,16 @@ int main(int argc, char* argv[])
                 if (silence_ms > force_final_after_ms)
                 {
                     std::string text = recognizer.forceFinalResult();
+                    if (!text.empty()) {
+                        std::cout << "\n🎤 РАСПОЗНАНО: " << text << "\n";
+                        std::cout << "════════════════════════════════════════\n";
+                        
+                        // Отправляем на Python для обработки
+                        sendToPythonServer(text);
+                        
+                        // Очищаем распознаватель для следующего ввода
+                        recognizer.reset();
+                    }
                 }
 
                 audioCapture.clearAudioBuffer(pos);
@@ -116,7 +135,7 @@ int main(int argc, char* argv[])
         std::cout << "🧠 Қудратига Qwen AI\n";
         std::cout << "════════════════════════════════════════\n";
         std::cout << "✅ Ўзбек тилида сўзлашуни кутмоқда...\n";
-        std::cout << "Enter ни босинг чиқиш учун\n";
+        std::cout << "🔊 Говорите в микрофон (Enter для выхода)\n";
         std::cout << "════════════════════════════════════════\n";
         
         std::cin.get();
@@ -131,9 +150,8 @@ int main(int argc, char* argv[])
         }
 
         if (audioThread.joinable()) audioThread.join();
-        if (serverThread.joinable()) serverThread.join();
         
-        std::cout << "✅ Жарвис янаён...\n";
+        std::cout << "✅ Программа завершена\n";
     }
     catch (const std::exception& e)
     {

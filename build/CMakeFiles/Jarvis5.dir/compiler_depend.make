@@ -192,6 +192,7 @@ CMakeFiles/Jarvis5.dir/main.cpp.o: /home/sirius/works/Jarvis5/main.cpp \
   /usr/include/c++/15.2.1/cstdint \
   /usr/include/c++/15.2.1/cstdio \
   /usr/include/c++/15.2.1/cstdlib \
+  /usr/include/c++/15.2.1/cstring \
   /usr/include/c++/15.2.1/ctime \
   /usr/include/c++/15.2.1/cwchar \
   /usr/include/c++/15.2.1/cwctype \
@@ -266,6 +267,8 @@ CMakeFiles/Jarvis5.dir/main.cpp.o: /home/sirius/works/Jarvis5/main.cpp \
   /usr/include/stdint.h \
   /usr/include/stdio.h \
   /usr/include/stdlib.h \
+  /usr/include/string.h \
+  /usr/include/strings.h \
   /usr/include/sys/cdefs.h \
   /usr/include/sys/select.h \
   /usr/include/sys/single_threaded.h \
@@ -778,8 +781,6 @@ CMakeFiles/Jarvis5.dir/src/audioCapture.cpp.o:
 
 /home/sirius/works/Jarvis5/src/library/libvosk.so:
 
-/usr/include/c++/15.2.1/cstring:
-
 /home/sirius/works/Jarvis5/src/recognizer.cpp:
 
 /usr/lib/gcc/x86_64-pc-linux-gnu/15.2.1/include/xmmintrin.h:
@@ -811,10 +812,6 @@ CMakeFiles/Jarvis5.dir/src/recognizer.cpp.o:
 /usr/include/dlfcn.h:
 
 /usr/include/c++/15.2.1/tr1/special_function_util.h:
-
-/usr/include/strings.h:
-
-/usr/include/c++/15.2.1/tr1/poly_laguerre.tcc:
 
 /usr/include/c++/15.2.1/tr1/modified_bessel_func.tcc:
 
@@ -889,6 +886,10 @@ CMakeFiles/Jarvis5.dir/src/recognizer.cpp.o:
 /usr/include/sys/select.h:
 
 /usr/include/sys/cdefs.h:
+
+/usr/include/c++/15.2.1/tr1/poly_laguerre.tcc:
+
+/usr/include/strings.h:
 
 /usr/include/stdlib.h:
 
@@ -1371,6 +1372,8 @@ CMakeFiles/Jarvis5.dir/main.cpp.o:
 /usr/include/c++/15.2.1/cstddef:
 
 /usr/include/c++/15.2.1/cstdint:
+
+/usr/include/c++/15.2.1/cstring:
 
 /usr/include/c++/15.2.1/bits/shared_ptr_base.h:
 
