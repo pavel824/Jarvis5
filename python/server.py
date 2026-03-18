@@ -63,4 +63,4 @@ if __name__ == '__main__':
     print("🎤 JARVIS 5 - Python NLP Engine")
     print("🚀 Запуск на localhost:5000")
     print("⏳ Ожидание текста от C++ STT сервера...")
-    app.run(host='localhost', port=5000, debug=True)
+    app.run(host='localhost', port=8080, debug=True)
